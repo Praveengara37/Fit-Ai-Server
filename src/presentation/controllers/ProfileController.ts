@@ -5,6 +5,7 @@ import { IUserRepository } from '../../domain/interfaces/repositories/IUserRepos
 import { successResponse } from '../../shared/utils/response';
 import { NotFoundError } from '../../shared/errors/NotFoundError';
 import { SetupProfileInput, UpdateProfileInput } from '../validators/profileValidators';
+import { Gender, FitnessGoal, ActivityLevel, DietaryPreference } from '../../domain/entities/UserProfile';
 
 /**
  * Profile Controller
@@ -30,8 +31,17 @@ export class ProfileController {
 
             const input = req.body as SetupProfileInput;
 
+            const useCaseInput = {
+                ...input,
+                dateOfBirth: input.dateOfBirth ? new Date(input.dateOfBirth) : undefined,
+                gender: input.gender as Gender | undefined,
+                fitnessGoal: input.fitnessGoal as FitnessGoal,
+                activityLevel: input.activityLevel as ActivityLevel,
+                dietaryPreference: input.dietaryPreference as DietaryPreference | undefined,
+            };
+
             // Execute setup profile use case
-            const profile = await this.setupProfileUseCase.execute(userId, input);
+            const profile = await this.setupProfileUseCase.execute(userId, useCaseInput);
 
             // Fetch user data for complete response
             const user = await this.userRepository.findById(userId);
@@ -64,8 +74,17 @@ export class ProfileController {
 
             const input = req.body as UpdateProfileInput;
 
+            const useCaseInput = {
+                ...input,
+                dateOfBirth: input.dateOfBirth ? new Date(input.dateOfBirth) : undefined,
+                gender: input.gender as Gender | undefined,
+                fitnessGoal: input.fitnessGoal as FitnessGoal | undefined,
+                activityLevel: input.activityLevel as ActivityLevel | undefined,
+                dietaryPreference: input.dietaryPreference as DietaryPreference | undefined,
+            };
+
             // Execute update profile use case
-            const profile = await this.updateProfileUseCase.execute(userId, input);
+            const profile = await this.updateProfileUseCase.execute(userId, useCaseInput as any);
 
             // Fetch user data for complete response
             const user = await this.userRepository.findById(userId);

@@ -1,6 +1,6 @@
 import { IUpdateProfile, UpdateProfileInput } from '../../domain/interfaces/use-cases/IUpdateProfile';
 import { IUserRepository } from '../../domain/interfaces/repositories/IUserRepository';
-import { UserProfile } from '../../domain/entities/UserProfile';
+import { UserProfile, Gender, FitnessGoal, ActivityLevel, DietaryPreference } from '../../domain/entities/UserProfile';
 import { BadRequestError } from '../../shared/errors/BadRequestError';
 import { NotFoundError } from '../../shared/errors/NotFoundError';
 import { logger } from '../../config/logger';
@@ -40,8 +40,15 @@ export class UpdateProfile implements IUpdateProfile {
             }
         }
 
-        // Update profile
-        const updatedProfile = await this.userRepository.updateProfile(userId, input);
+        // Execute update
+        const updatedProfile = await this.userRepository.updateProfile(userId, {
+            ...input,
+            dateOfBirth: input.dateOfBirth ? new Date(input.dateOfBirth) : undefined,
+            gender: input.gender as Gender | null | undefined,
+            fitnessGoal: input.fitnessGoal as FitnessGoal | undefined,
+            activityLevel: input.activityLevel as ActivityLevel | undefined,
+            dietaryPreference: input.dietaryPreference as DietaryPreference | null | undefined,
+        });
 
         if (!updatedProfile) {
             throw new NotFoundError('Failed to update profile');

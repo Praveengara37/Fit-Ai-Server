@@ -1,7 +1,17 @@
+import { JwtPayload } from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
 import { verifyToken } from '../../shared/utils/jwt';
 import { UnauthorizedError } from '../../shared/errors/UnauthorizedError';
 import { config } from '../../config/env';
+
+// Extend Express Request
+declare global {
+    namespace Express {
+        interface Request {
+            user?: { id: string } | JwtPayload | any;
+        }
+    }
+}
 
 /**
  * Authentication middleware
@@ -9,7 +19,7 @@ import { config } from '../../config/env';
  */
 export const authMiddleware = async (
     req: Request,
-    res: Response,
+    _res: Response,
     next: NextFunction
 ): Promise<void> => {
     try {

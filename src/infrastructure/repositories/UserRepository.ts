@@ -2,7 +2,7 @@ import { PrismaClient } from '@prisma/client';
 import { IUserRepository } from '../../domain/interfaces/repositories/IUserRepository';
 import { User, CreateUserData } from '../../domain/entities/User';
 import { UserProfile, CreateUserProfileData } from '../../domain/entities/UserProfile';
-import { NotFoundError } from '../../shared/errors/NotFoundError';
+// Removed unused NotFoundError import
 
 /**
  * User Repository implementation using Prisma

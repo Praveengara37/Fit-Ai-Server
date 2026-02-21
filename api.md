@@ -140,3 +140,121 @@ Same as **Setup Profile**, but *all* fields are optional. At least one field mus
 
 **Response Data (`data` field):**
 Returns the consolidated complete user and profile details.
+
+---
+
+## Step Tracking
+
+### 1. Log Steps
+**Endpoint:** `POST /api/steps/log`
+**Auth Required:** Yes
+
+**Request Body:**
+```json
+{
+  "date": "2023-10-25", // string (YYYY-MM-DD), required
+  "steps": 10000,       // number, minimum 0
+  "distanceKm": 7.5,    // number, minimum 0 (optional)
+  "caloriesBurned": 400 // number, minimum 0 (optional)
+}
+```
+
+---
+
+### 2. Get Today's Steps
+**Endpoint:** `GET /api/steps/today`
+**Auth Required:** Yes
+
+**Response Data (`data` field):**
+```json
+{
+  "steps": {
+     "date": "2023-10-25T00:00:00.000Z",
+     "steps": 10000,
+     "distanceKm": 7.5,
+     "caloriesBurned": 400
+  },
+  "goalProgress": {
+     "goal": 10000,
+     "current": 10000,
+     "percentage": 100,
+     "achieved": true
+  }
+}
+```
+
+---
+
+### 3. Get Step History
+**Endpoint:** `GET /api/steps/history`
+**Auth Required:** Yes
+
+**Query Parameters:**
+- `startDate` (optional, YYYY-MM-DD, defaults to 7 days ago)
+- `endDate` (optional, YYYY-MM-DD, defaults to today)
+
+**Response Data (`data` field):**
+```json
+{
+  "history": [
+    // Array of step objects for each day in range. Days without logs return 0 steps.
+  ]
+}
+```
+
+---
+
+### 4. Get Step Stats
+**Endpoint:** `GET /api/steps/stats`
+**Auth Required:** Yes
+
+**Query Parameters:**
+- `period`: `week` | `month` | `year` (required)
+
+**Response Data (`data` field):**
+```json
+{
+  "period": "week",
+  "stats": {
+      "totalSteps": 50000,
+      "averageSteps": 7142,
+      "totalDistanceKm": 35.5,
+      "totalCalories": 2000,
+      "bestDay": {
+          "date": "2023-10-24",
+          "steps": 15000
+      },
+      "currentStreak": 5,
+      "daysWithActivity": 6,
+      "goalReachedDays": 4
+  }
+}
+```
+
+---
+
+### 5. Update Step Entry
+**Endpoint:** `PATCH /api/steps/:id`
+**Auth Required:** Yes
+
+**Request Body:**
+```json
+{
+  "steps": 12000,       // number, minimum 0 (optional)
+  "distanceKm": 9.0,    // number, minimum 0 (optional)
+  "caloriesBurned": 450 // number, minimum 0 (optional)
+}
+```
+
+---
+
+### 6. Delete Step Entry
+**Endpoint:** `DELETE /api/steps/:id`
+**Auth Required:** Yes
+
+**Response Data (`data` field):**
+```json
+{
+  "message": "Steps record deleted successfully"
+}
+```

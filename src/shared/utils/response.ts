@@ -38,7 +38,7 @@ export const errorResponse = (
         error: {
             code,
             message,
-            ...(details && { details }),
+            details: details ? details : undefined,
         },
     });
 };

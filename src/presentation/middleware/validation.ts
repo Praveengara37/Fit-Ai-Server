@@ -1,39 +1,29 @@
 import { Request, Response, NextFunction } from 'express';
-import { AnyZodObject, ZodError } from 'zod';
-import { BadRequestError } from '../../shared/errors/BadRequestError';
+import { ZodTypeAny, ZodError } from 'zod';
+import { errorResponse } from '../../shared/utils/response';
 
 /**
- * Validation source type
- */
-type ValidationSource = 'body' | 'query' | 'params';
-
-/**
- * Middleware factory for Zod validation
+ * Middleware to validate request against Zod schema
  * @param schema - Zod schema to validate against
- * @param source - Where to get data from (body, query, params)
- * @returns Express middleware function
+ * @param source - Request property to validate (body, query, params)
  */
-export const validate =
-    (schema: AnyZodObject, source: ValidationSource = 'body') =>
-        async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-            try {
-                const data = req[source];
-                const validated = await schema.parseAsync(data);
+export const validate = (schema: ZodTypeAny, source: 'body' | 'query' | 'params' = 'body') => {
+    return (req: Request, res: Response, next: NextFunction): void => {
+        try {
+            const result = schema.parse(req[source]);
+            req[source] = result;
+            next();
+        } catch (error) {
+            if (error instanceof ZodError) {
+                const formattedErrors = error.errors.map((err) => ({
+                    field: err.path.join('.'),
+                    message: err.message,
+                }));
 
-                // Replace request data with validated data
-                req[source] = validated;
-
-                next();
-            } catch (error) {
-                if (error instanceof ZodError) {
-                    const errors = error.errors.map((err) => ({
-                        field: err.path.join('.'),
-                        message: err.message,
-                    }));
-
-                    next(new BadRequestError('Validation failed', errors));
-                } else {
-                    next(error);
-                }
+                errorResponse(res, 'Validation Error', 'VALIDATION_ERROR', 400, formattedErrors);
+                return;
             }
-        };
+            next(error);
+        }
+    };
+};

@@ -70,7 +70,7 @@ export class AuthController {
      * Logout user
      * POST /api/auth/logout
      */
-    logout = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    logout = async (_req: Request, res: Response, _next: NextFunction): Promise<void> => {
         try {
             // Clear authentication cookie
             clearAuthCookie(res);
@@ -78,7 +78,7 @@ export class AuthController {
             // Return success response
             successResponse(res, { message: 'Logged out successfully' });
         } catch (error) {
-            next(error);
+            _next(error);
         }
     };
 

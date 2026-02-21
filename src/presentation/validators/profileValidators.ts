@@ -26,8 +26,7 @@ const dietaryPreferenceEnum = z.enum(['none', 'vegetarian', 'vegan', 'keto', 'pa
 export const setupProfileSchema = z.object({
     dateOfBirth: z
         .string()
-        .optional()
-        .transform((val) => (val ? new Date(val) : undefined)),
+        .optional(),
     gender: genderEnum.optional(),
     heightCm: z
         .number()
@@ -59,8 +58,7 @@ export const updateProfileSchema = z
     .object({
         dateOfBirth: z
             .string()
-            .optional()
-            .transform((val) => (val ? new Date(val) : undefined)),
+            .optional(),
         gender: genderEnum.nullable().optional(),
         heightCm: z
             .number()

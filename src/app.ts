@@ -7,6 +7,7 @@ import { requestLogger } from './presentation/middleware/requestLogger';
 import { errorHandler } from './presentation/middleware/errorHandler';
 import { createAuthRoutes } from './presentation/routes/auth.routes';
 import { createProfileRoutes } from './presentation/routes/profile.routes';
+import { createStepsRoutes } from './presentation/routes/stepsRoutes';
 
 // Import use cases
 import { RegisterUser } from './application/use-cases/RegisterUser';
@@ -14,13 +15,21 @@ import { AuthenticateUser } from './application/use-cases/AuthenticateUser';
 import { SetupProfile } from './application/use-cases/SetupProfile';
 import { UpdateProfile } from './application/use-cases/UpdateProfile';
 import { ChangePassword } from './application/use-cases/ChangePassword';
+import { LogSteps } from './application/use-cases/LogSteps';
+import { GetTodaySteps } from './application/use-cases/GetTodaySteps';
+import { GetStepsHistory } from './application/use-cases/GetStepsHistory';
+import { GetStepsStats } from './application/use-cases/GetStepsStats';
+import { UpdateSteps } from './application/use-cases/UpdateSteps';
+import { DeleteSteps } from './application/use-cases/DeleteSteps';
 
 // Import repositories
 import { UserRepository } from './infrastructure/repositories/UserRepository';
+import { DailyStepsRepository } from './infrastructure/repositories/DailyStepsRepository';
 
 // Import controllers
 import { AuthController } from './presentation/controllers/AuthController';
 import { ProfileController } from './presentation/controllers/ProfileController';
+import { StepsController } from './presentation/controllers/StepsController';
 
 /**
  * Create and configure Express application
@@ -77,31 +86,49 @@ export const createApp = (): Application => {
 
     // Repository layer
     const userRepository = new UserRepository(prisma);
+    const dailyStepsRepository = new DailyStepsRepository(prisma);
 
     // Application layer (use cases)
-    const registerUserUseCase = new RegisterUser(userRepository);
-    const authenticateUserUseCase = new AuthenticateUser(userRepository);
+    const registerUserUseCase = new RegisterUser(userRepository as any);
+    const authenticateUserUseCase = new AuthenticateUser(userRepository as any);
     const setupProfileUseCase = new SetupProfile(userRepository);
     const updateProfileUseCase = new UpdateProfile(userRepository);
-    const changePasswordUseCase = new ChangePassword(userRepository);
+    const changePasswordUseCase = new ChangePassword(userRepository as any);
+
+    // Steps Use Cases
+    const logStepsUseCase = new LogSteps(dailyStepsRepository);
+    const getTodayStepsUseCase = new GetTodaySteps(dailyStepsRepository);
+    const getStepsHistoryUseCase = new GetStepsHistory(dailyStepsRepository);
+    const getStepsStatsUseCase = new GetStepsStats(dailyStepsRepository);
+    const updateStepsUseCase = new UpdateSteps(dailyStepsRepository);
+    const deleteStepsUseCase = new DeleteSteps(dailyStepsRepository);
 
     // Presentation layer (controllers)
     const authController = new AuthController(registerUserUseCase, authenticateUserUseCase, changePasswordUseCase);
     const profileController = new ProfileController(setupProfileUseCase, updateProfileUseCase, userRepository);
+    const stepsController = new StepsController(
+        logStepsUseCase,
+        getTodayStepsUseCase,
+        getStepsHistoryUseCase,
+        getStepsStatsUseCase,
+        updateStepsUseCase,
+        deleteStepsUseCase
+    );
 
     // ===== ROUTES =====
 
     // Health check
-    app.get('/health', (req, res) => {
+    app.get('/health', (_req, res) => {
         res.json({ status: 'ok', timestamp: new Date().toISOString() });
     });
 
     // API routes
     app.use('/api/auth', createAuthRoutes(authController));
     app.use('/api/profile', createProfileRoutes(profileController));
+    app.use('/api/steps', createStepsRoutes(stepsController));
 
     // 404 handler
-    app.use((req, res) => {
+    app.use((_req, res) => {
         res.status(404).json({
             success: false,
             error: {

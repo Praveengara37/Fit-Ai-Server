@@ -14,9 +14,9 @@ export interface JwtPayload {
  * @param payload - User data to encode in token
  * @returns Signed JWT token
  */
-export const generateToken = (payload: JwtPayload): string => {
-    return jwt.sign(payload, config.JWT_SECRET, {
-        expiresIn: config.JWT_EXPIRY,
+export const generateToken = (payload: object): string => {
+    return jwt.sign(payload, config.JWT_SECRET as jwt.Secret, {
+        expiresIn: config.JWT_EXPIRY as jwt.SignOptions['expiresIn'],
     });
 };
 
