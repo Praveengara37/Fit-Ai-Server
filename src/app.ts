@@ -45,6 +45,7 @@ export const createApp = (): Application => {
                     'http://localhost:3002',
                     'http://localhost:5173',
                     'http://localhost:5174',
+                    'http://localhost:8081',
                     'exp://192.168.1.22:8081', // Expo Go
                 ];
 
