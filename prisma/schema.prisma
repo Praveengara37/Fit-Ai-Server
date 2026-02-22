@@ -20,6 +20,8 @@ model User {
   
   profile      UserProfile?
   dailySteps   DailySteps[]
+  meals        Meal[]
+  nutritionGoals NutritionGoals?
 
   @@index([email])
   @@map("users")
@@ -60,6 +62,86 @@ model UserProfile {
 
   @@index([userId])
   @@map("user_profiles")
+}
+
+// ===== MEAL TRACKING MODELS =====
+
+model Meal {
+  id              String      @id @default(uuid())
+  userId          String      @map("user_id")
+  mealType        MealType    @map("meal_type")
+  date            DateTime    @db.Date
+  totalCalories   Float       @map("total_calories")
+  totalProtein    Float       @map("total_protein")
+  totalCarbs      Float       @map("total_carbs")
+  totalFat        Float       @map("total_fat")
+  notes           String?     @db.Text
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+  
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  foods           MealFood[]
+  
+  @@index([userId, date])
+  @@map("meals")
+}
+
+model MealFood {
+  id              String   @id @default(uuid())
+  mealId          String   @map("meal_id")
+  foodId          String?  @map("food_id")
+  foodName        String   @map("food_name")
+  brandName       String?  @map("brand_name")
+  servingSize     Float    @map("serving_size")
+  servingUnit     String   @map("serving_unit")
+  calories        Float
+  protein         Float
+  carbs           Float
+  fat             Float
+  createdAt       DateTime @default(now()) @map("created_at")
+  
+  meal            Meal     @relation(fields: [mealId], references: [id], onDelete: Cascade)
+  
+  @@index([mealId])
+  @@map("meal_foods")
+}
+
+model NutritionGoals {
+  id              String   @id @default(uuid())
+  userId          String   @unique @map("user_id")
+  dailyCalories   Int      @map("daily_calories") @default(2000)
+  dailyProtein    Float    @map("daily_protein") @default(150)
+  dailyCarbs      Float    @map("daily_carbs") @default(250)
+  dailyFat        Float    @map("daily_fat") @default(65)
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("nutrition_goals")
+}
+
+model FoodCache {
+  id              String   @id @default(uuid())
+  foodId          String   @unique @map("food_id")
+  foodName        String   @map("food_name")
+  brandName       String?  @map("brand_name")
+  foodData        Json     @map("food_data")
+  searchTerms     String   @map("search_terms") @db.Text
+  cachedAt        DateTime @default(now()) @map("cached_at")
+  expiresAt       DateTime @map("expires_at")
+  
+  @@index([foodName])
+  @@map("food_cache")
+}
+
+// ===== ENUMS =====
+
+enum MealType {
+  breakfast
+  lunch
+  dinner
+  snack
 }
 
 enum Gender {

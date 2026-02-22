@@ -8,6 +8,9 @@ import { errorHandler } from './presentation/middleware/errorHandler';
 import { createAuthRoutes } from './presentation/routes/auth.routes';
 import { createProfileRoutes } from './presentation/routes/profile.routes';
 import { createStepsRoutes } from './presentation/routes/stepsRoutes';
+import { createFoodRoutes } from './presentation/routes/foodRoutes';
+import { createMealRoutes } from './presentation/routes/mealRoutes';
+import { createNutritionRoutes } from './presentation/routes/nutritionRoutes';
 
 // Import use cases
 import { RegisterUser } from './application/use-cases/RegisterUser';
@@ -21,15 +24,33 @@ import { GetStepsHistory } from './application/use-cases/GetStepsHistory';
 import { GetStepsStats } from './application/use-cases/GetStepsStats';
 import { UpdateSteps } from './application/use-cases/UpdateSteps';
 import { DeleteSteps } from './application/use-cases/DeleteSteps';
+import { SearchFoods } from './application/use-cases/SearchFoods';
+import { GetFoodDetails } from './application/use-cases/GetFoodDetails';
+import { LogMeal } from './application/use-cases/LogMeal';
+import { GetTodayMeals } from './application/use-cases/GetTodayMeals';
+import { GetMealHistory } from './application/use-cases/GetMealHistory';
+import { GetMealStats } from './application/use-cases/GetMealStats';
+import { UpdateMeal } from './application/use-cases/UpdateMeal';
+import { DeleteMeal } from './application/use-cases/DeleteMeal';
+import { SetNutritionGoals } from './application/use-cases/SetNutritionGoals';
+import { GetNutritionGoals } from './application/use-cases/GetNutritionGoals';
 
 // Import repositories
 import { UserRepository } from './infrastructure/repositories/UserRepository';
 import { DailyStepsRepository } from './infrastructure/repositories/DailyStepsRepository';
+import { MealRepository } from './infrastructure/repositories/MealRepository';
+import { FoodCacheRepository } from './infrastructure/repositories/FoodCacheRepository';
+
+// Import services
+import { FatSecretService } from './infrastructure/services/FatSecretService';
 
 // Import controllers
 import { AuthController } from './presentation/controllers/AuthController';
 import { ProfileController } from './presentation/controllers/ProfileController';
 import { StepsController } from './presentation/controllers/StepsController';
+import { FoodController } from './presentation/controllers/FoodController';
+import { MealController } from './presentation/controllers/MealController';
+import { NutritionController } from './presentation/controllers/NutritionController';
 
 /**
  * Create and configure Express application
@@ -87,6 +108,11 @@ export const createApp = (): Application => {
     // Repository layer
     const userRepository = new UserRepository(prisma);
     const dailyStepsRepository = new DailyStepsRepository(prisma);
+    const mealRepository = new MealRepository(prisma);
+    const foodCacheRepository = new FoodCacheRepository(prisma);
+
+    // Service layer
+    const fatSecretService = new FatSecretService();
 
     // Application layer (use cases)
     const registerUserUseCase = new RegisterUser(userRepository as any);
@@ -103,6 +129,18 @@ export const createApp = (): Application => {
     const updateStepsUseCase = new UpdateSteps(dailyStepsRepository);
     const deleteStepsUseCase = new DeleteSteps(dailyStepsRepository);
 
+    // Meal & Food Use Cases
+    const searchFoodsUseCase = new SearchFoods(fatSecretService, foodCacheRepository);
+    const getFoodDetailsUseCase = new GetFoodDetails(fatSecretService, foodCacheRepository);
+    const logMealUseCase = new LogMeal(mealRepository);
+    const getTodayMealsUseCase = new GetTodayMeals(mealRepository);
+    const getMealHistoryUseCase = new GetMealHistory(mealRepository);
+    const getMealStatsUseCase = new GetMealStats(mealRepository);
+    const updateMealUseCase = new UpdateMeal(mealRepository);
+    const deleteMealUseCase = new DeleteMeal(mealRepository);
+    const setNutritionGoalsUseCase = new SetNutritionGoals(mealRepository);
+    const getNutritionGoalsUseCase = new GetNutritionGoals(mealRepository);
+
     // Presentation layer (controllers)
     const authController = new AuthController(registerUserUseCase, authenticateUserUseCase, changePasswordUseCase);
     const profileController = new ProfileController(setupProfileUseCase, updateProfileUseCase, userRepository);
@@ -114,6 +152,16 @@ export const createApp = (): Application => {
         updateStepsUseCase,
         deleteStepsUseCase
     );
+    const foodController = new FoodController(searchFoodsUseCase, getFoodDetailsUseCase);
+    const mealController = new MealController(
+        logMealUseCase,
+        getTodayMealsUseCase,
+        getMealHistoryUseCase,
+        getMealStatsUseCase,
+        updateMealUseCase,
+        deleteMealUseCase
+    );
+    const nutritionController = new NutritionController(setNutritionGoalsUseCase, getNutritionGoalsUseCase);
 
     // ===== ROUTES =====
 
@@ -126,6 +174,9 @@ export const createApp = (): Application => {
     app.use('/api/auth', createAuthRoutes(authController));
     app.use('/api/profile', createProfileRoutes(profileController));
     app.use('/api/steps', createStepsRoutes(stepsController));
+    app.use('/api/foods', createFoodRoutes(foodController));
+    app.use('/api/meals', createMealRoutes(mealController));
+    app.use('/api/nutrition', createNutritionRoutes(nutritionController));
 
     // 404 handler
     app.use((_req, res) => {
